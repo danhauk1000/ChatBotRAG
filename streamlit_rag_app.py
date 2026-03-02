@@ -26,7 +26,7 @@ if "settings" not in st.session_state:
         "services": "Aferição de pressão, Teste de glicemia, Aplicação de injetáveis",
         "delivery_rules": "Entrega grátis para pedidos acima de R$ 50,00. Prazo de 30 a 60 minutos.",
         "payment_methods": "Cartão de Crédito, Débito, PIX e Dinheiro",
-        "embedding_model": "models/text-embedding-004" # Default updated
+        "embedding_model": "models/embedding-001" # Reverted to stable default
     }
 
 if "messages" not in st.session_state:
@@ -46,7 +46,7 @@ else:
 
 def get_embeddings(texts):
     """Gera embeddings para uma lista de textos."""
-    model_choice = st.session_state.settings.get("embedding_model", "models/text-embedding-004")
+    model_choice = st.session_state.settings.get("embedding_model", "models/embedding-001")
     
     try:
         # Google Gemini Embedding
@@ -65,7 +65,7 @@ def find_relevant_context(query, top_k=5):
     if not st.session_state.catalog_chunks or st.session_state.catalog_embeddings is None:
         return ""
 
-    model_choice = st.session_state.settings.get("embedding_model", "models/text-embedding-004")
+    model_choice = st.session_state.settings.get("embedding_model", "models/embedding-001")
 
     try:
         # Embed da query
@@ -242,8 +242,8 @@ with tabs[2]:
             st.write("**Modelo de Embedding (RAG)**")
             embedding_model = st.selectbox(
                 "Escolha o modelo de busca semântica",
-                options=["models/embedding-001", "models/text-embedding-004"],
-                index=["models/embedding-001", "models/text-embedding-004"].index(st.session_state.settings.get('embedding_model', 'models/text-embedding-004'))
+                options=["models/embedding-001"],
+                index=0
             )
         
         if st.form_submit_button("Salvar Configurações Pro"):
