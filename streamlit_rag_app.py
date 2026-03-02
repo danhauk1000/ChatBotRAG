@@ -25,13 +25,14 @@ if "settings" not in st.session_state:
         "openingHours": "08:00 - 20:00",
         "services": "Aferição de pressão, Teste de glicemia, Aplicação de injetáveis",
         "delivery_rules": "Entrega grátis para pedidos acima de R$ 50,00. Prazo de 30 a 60 minutos.",
-        "payment_methods": "Cartão de Crédito, Débito, PIX e Dinheiro"
+        "payment_methods": "Cartão de Crédito, Débito, PIX e Dinheiro",
+        "embedding_model": "models/text-embedding-004" # Default updated
     }
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# --- Gemini API Setup ---
+# --- API Setup ---
 api_key = os.getenv("GEMINI_API_KEY")
 if not api_key and "GEMINI_API_KEY" in st.secrets:
     api_key = st.secrets["GEMINI_API_KEY"]
@@ -39,46 +40,37 @@ if not api_key and "GEMINI_API_KEY" in st.secrets:
 if api_key:
     genai.configure(api_key=api_key)
 else:
-    st.error("⚠️ Chave de API não encontrada! Configure 'GEMINI_API_KEY' nos Secrets do Streamlit ou como variável de ambiente.")
+    st.error("⚠️ Chave de API Gemini não encontrada!")
 
 # --- RAG Logic ---
 
-def find_relevant_context(query, top_k=5):
-    """Busca vetorial otimizada usando similaridade de cosseno real."""
+def get_embeddings(texts):
+    """Gera embeddings para uma lista de textos."""
+    model_choice = st.session_state.settings.get("embedding_model", "models/text-embedding-004")
     
+    try:
+        # Google Gemini Embedding
+        result = genai.embed_content(
+            model=model_choice,
+            content=texts,
+            task_type="retrieval_document"
+        )
+        return np.array(result['embedding'])
+    except Exception as e:
+        st.error(f"Erro ao gerar embeddings ({model_choice}): {e}")
+        return None
+
+def find_relevant_context(query, top_k=5):
+    """Encontra os trechos mais relevantes do catálogo para a pergunta do usuário."""
     if not st.session_state.catalog_chunks or st.session_state.catalog_embeddings is None:
         return ""
 
-    try:
-        # Embedding da query
-        response = genai.embed_content(
-            model="models/text-embedding-004",
-            content=query,
-            task_type="retrieval_query"
-        )
+    model_choice = st.session_state.settings.get("embedding_model", "models/text-embedding-004")
 
-        query_embedding = np.array(response["embedding"])
-
-        # Normalizar query
-        query_embedding = query_embedding / np.linalg.norm(query_embedding)
-
-        # Similaridade de cosseno
-        similarities = np.dot(st.session_state.catalog_embeddings, query_embedding)
-
-        # Top K mais relevantes
-        top_indices = np.argsort(similarities)[-top_k:][::-1]
-
-        relevant_chunks = [st.session_state.catalog_chunks[i] for i in top_indices]
-
-        return "\n---\n".join(relevant_chunks)
-
-    except Exception as e:
-        st.error(f"Erro na busca RAG: {e}")
-        return ""
     try:
         # Embed da query
         query_embedding = genai.embed_content(
-            model="models/text-embedding-004" ,
+            model=model_choice,
             content=query,
             task_type="retrieval_query"
         )['embedding']
@@ -245,6 +237,14 @@ with tabs[2]:
             services = st.text_area("Serviços Oferecidos", value=st.session_state.settings['services'])
             delivery = st.text_area("Regras de Entrega", value=st.session_state.settings['delivery_rules'])
             payment = st.text_area("Formas de Pagamento", value=st.session_state.settings['payment_methods'])
+            
+            st.markdown("---")
+            st.write("**Modelo de Embedding (RAG)**")
+            embedding_model = st.selectbox(
+                "Escolha o modelo de busca semântica",
+                options=["models/embedding-001", "models/text-embedding-004"],
+                index=["models/embedding-001", "models/text-embedding-004"].index(st.session_state.settings.get('embedding_model', 'models/text-embedding-004'))
+            )
         
         if st.form_submit_button("Salvar Configurações Pro"):
             st.session_state.settings = {
@@ -254,7 +254,8 @@ with tabs[2]:
                 "openingHours": hours,
                 "services": services,
                 "delivery_rules": delivery,
-                "payment_methods": payment
+                "payment_methods": payment,
+                "embedding_model": embedding_model
             }
             st.success("Configurações atualizadas com sucesso!")
 
