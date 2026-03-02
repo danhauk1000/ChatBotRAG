@@ -43,34 +43,42 @@ else:
 
 # --- RAG Logic ---
 
-def get_embeddings(texts):
-    """Gera embeddings para uma lista de textos usando Gemini."""
-    try:
-        embeddings = []
-
-        for text in texts:
-            result = genai.embed_content(
-                model="models/text-embedding-004",  # modelo mais estável
-                content=text,
-                task_type="retrieval_document"
-            )
-            embeddings.append(result["embedding"])
-
-        return np.array(embeddings)
-
-    except Exception as e:
-        st.error(f"Erro ao gerar embeddings: {e}")
-        return None
-
 def find_relevant_context(query, top_k=5):
-    """Encontra os trechos mais relevantes do catálogo para a pergunta do usuário."""
+    """Busca vetorial otimizada usando similaridade de cosseno real."""
+    
     if not st.session_state.catalog_chunks or st.session_state.catalog_embeddings is None:
         return ""
 
     try:
+        # Embedding da query
+        response = genai.embed_content(
+            model="models/text-embedding-004",
+            content=query,
+            task_type="retrieval_query"
+        )
+
+        query_embedding = np.array(response["embedding"])
+
+        # Normalizar query
+        query_embedding = query_embedding / np.linalg.norm(query_embedding)
+
+        # Similaridade de cosseno
+        similarities = np.dot(st.session_state.catalog_embeddings, query_embedding)
+
+        # Top K mais relevantes
+        top_indices = np.argsort(similarities)[-top_k:][::-1]
+
+        relevant_chunks = [st.session_state.catalog_chunks[i] for i in top_indices]
+
+        return "\n---\n".join(relevant_chunks)
+
+    except Exception as e:
+        st.error(f"Erro na busca RAG: {e}")
+        return ""
+    try:
         # Embed da query
         query_embedding = genai.embed_content(
-            model="models/text-multilingual-embedding-002" ,
+            model="models/text-embedding-004" ,
             content=query,
             task_type="retrieval_query"
         )['embedding']
