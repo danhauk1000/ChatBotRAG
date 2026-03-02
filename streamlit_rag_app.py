@@ -47,7 +47,7 @@ def get_embeddings(texts):
     """Gera embeddings para uma lista de textos usando o modelo do Google."""
     try:
         result = genai.embed_content(
-            model="models/text-embedding-004",
+            model="models/embedding-001",
             content=texts,
             task_type="retrieval_document"
         )
@@ -64,7 +64,7 @@ def find_relevant_context(query, top_k=5):
     try:
         # Embed da query
         query_embedding = genai.embed_content(
-            model="models/text-embedding-004",
+            model="models/embedding-001",
             content=query,
             task_type="retrieval_query"
         )['embedding']
@@ -81,7 +81,7 @@ def find_relevant_context(query, top_k=5):
 
 def get_clara_response(user_input, history):
     try:
-        model = genai.GenerativeModel('gemini-3-flash-preview')
+        model = genai.GenerativeModel('gemini-3.1-pro-preview')
         
         # Busca contexto relevante via RAG
         context = find_relevant_context(user_input)
@@ -132,7 +132,7 @@ def process_file_locally(uploaded_file):
             text = uploaded_file.read().decode("utf-8", errors="ignore")
         elif uploaded_file.type.startswith("image"):
             # Para imagens, ainda precisamos da IA para extrair o texto
-            model = genai.GenerativeModel('emini-3-flash-preview')
+            model = genai.GenerativeModel('gemini-3-flash-preview')
             image = Image.open(uploaded_file)
             prompt = "Extraia todos os produtos e preços desta imagem. Formate como: 'Produto - R$ Preço'."
             response = model.generate_content([prompt, image])
@@ -246,4 +246,5 @@ with tabs[2]:
 
 st.sidebar.markdown("---")
 st.sidebar.info("🚀 **Clara Pro** utiliza RAG (Retrieval-Augmented Generation) para buscas precisas no seu catálogo, reduzindo custos e aumentando a velocidade de resposta.")
-st.sidebar.warning("O modelo gemini-3.1-pro-preview é usado para o chat, garantindo maior raciocínio lógico.")
+st.sidebar.warning("O modelo Gemini 1.5 Pro é usado para o chat, garantindo maior raciocínio lógico.")
+
