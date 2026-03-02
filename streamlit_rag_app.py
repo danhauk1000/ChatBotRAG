@@ -44,14 +44,20 @@ else:
 # --- RAG Logic ---
 
 def get_embeddings(texts):
-    """Gera embeddings para uma lista de textos usando o modelo do Google."""
+    """Gera embeddings para uma lista de textos usando Gemini."""
     try:
-        result = genai.embed_content(
-            model="models/text-multilingual-embedding-002" ,
-            content=texts,
-            task_type="retrieval_document"
-        )
-        return np.array(result['embedding'])
+        embeddings = []
+
+        for text in texts:
+            result = genai.embed_content(
+                model="models/text-embedding-004",  # modelo mais estável
+                content=text,
+                task_type="retrieval_document"
+            )
+            embeddings.append(result["embedding"])
+
+        return np.array(embeddings)
+
     except Exception as e:
         st.error(f"Erro ao gerar embeddings: {e}")
         return None
