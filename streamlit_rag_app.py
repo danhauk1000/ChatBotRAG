@@ -81,7 +81,7 @@ def find_relevant_context(query, top_k=5):
 
 def get_clara_response(user_input, history):
     try:
-        model = genai.GenerativeModel('gemini-3.1-pro-preview')
+        model = genai.GenerativeModel('gemini-3-flash-preview')
         
         # Busca contexto relevante via RAG
         context = find_relevant_context(user_input)
@@ -132,7 +132,7 @@ def process_file_locally(uploaded_file):
             text = uploaded_file.read().decode("utf-8", errors="ignore")
         elif uploaded_file.type.startswith("image"):
             # Para imagens, ainda precisamos da IA para extrair o texto
-            model = genai.GenerativeModel('gemini-3.1-pro-preview')
+            model = genai.GenerativeModel('emini-3-flash-preview')
             image = Image.open(uploaded_file)
             prompt = "Extraia todos os produtos e preços desta imagem. Formate como: 'Produto - R$ Preço'."
             response = model.generate_content([prompt, image])
