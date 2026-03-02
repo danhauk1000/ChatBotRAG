@@ -47,7 +47,7 @@ def get_embeddings(texts):
     """Gera embeddings para uma lista de textos usando o modelo do Google."""
     try:
         result = genai.embed_content(
-            model="models/embedding-3-small)",
+            model="models/text-embedding-004" ,
             content=texts,
             task_type="retrieval_document"
         )
@@ -64,7 +64,7 @@ def find_relevant_context(query, top_k=5):
     try:
         # Embed da query
         query_embedding = genai.embed_content(
-            model="models/embedding-3-small",
+            model="models/text-embedding-004" ,
             content=query,
             task_type="retrieval_query"
         )['embedding']
