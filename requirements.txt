@@ -4,3 +4,7 @@ faiss-cpu
 numpy
 PyPDF2
 Pillow
+python-docx
+beautifulsoup4
+requests
+pandas
