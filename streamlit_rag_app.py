@@ -60,7 +60,7 @@ st.markdown("""
         border-radius: 0 0 10px 10px;
     }
 </style>
-""", unsafe_allow_items=True)
+""", unsafe_allow_html=True)
 
 # Inicialização do cliente OpenAI
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
